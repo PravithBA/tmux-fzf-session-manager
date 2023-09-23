@@ -1,2 +1,2 @@
-# tmux-fzf-session-manager
-Using fzf this manages tmux sessions
+# Tmux `fzf` session manager
+Using `fzf` this manages tmux sessions
