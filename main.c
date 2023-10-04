@@ -44,49 +44,11 @@ int main(int argc, char *argv[]) {
   }
   if (strlen(arguments.project_directory) <= 1) {
     fprintf(stderr, "project directory not provided \n");
-    return 0;
-  }
-  const char find_flags[] =
-      " -name .git -type d -print | sed 's/\\/\\.git//' | fzf";
-  char *command =
-      (char *)malloc(strlen("find ") + strlen(arguments.project_directory) +
-                     strlen(find_flags) + 1);
-  strcat(command, "find ");
-  strcat(command, arguments.project_directory);
-  strcat(command, find_flags);
-  char *selected_directory = run_command(&*command);
-  if (selected_directory != NULL) {
-    selected_directory[strlen(selected_directory) - 1] = '\0';
-  } else {
     return 1;
   }
-  free(command);
-  char *has_session_output = run_command("tmux has-session -t 'test'");
-  char *tmux_start_command;
-  if (has_session_output == NULL) {
-    char temp[] = "tmux new -t " SESSION_NAME " -c ";
-    tmux_start_command =
-        (char *)malloc(strlen(temp) + strlen(selected_directory) +
-                       strlen(" \\; new-window \"code .\"") + 1);
-    strcpy(tmux_start_command, temp);
-    strcat(tmux_start_command, selected_directory);
-    strcat(tmux_start_command, " \\; new-window \"code .\" ");
-  } else {
-    char temp[] = "tmux a -t " SESSION_NAME "\\; new-window -c ";
-    tmux_start_command = (char *)malloc(
-        strlen(temp) + strlen(selected_directory) + strlen(" \"code .\" ") + 1);
-    strcpy(tmux_start_command, temp);
-    strcat(tmux_start_command, selected_directory);
-    strcat(tmux_start_command, " \"code .\" ");
-  }
-  tmux_start_command[strlen(tmux_start_command)] = '\0';
-  command = (char *)malloc(strlen(tmux_start_command) +
-                           strlen(TMUX_MAIN_COMMAND) + 1);
-  strcpy(command, tmux_start_command);
-  strcat(command, TMUX_MAIN_COMMAND);
-  run_command(command);
-  free(command);
+  char *selected_directory =
+      get_selected_directory(arguments.project_directory);
+  int tmux_create_status = tmux_create_window(selected_directory);
   free(selected_directory);
-  free(tmux_start_command);
-  return 0;
+  return tmux_create_status;
 }
