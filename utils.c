@@ -6,7 +6,7 @@
 #include <unistd.h>
 
 char *run_command(const char *command) {
-  char buffer[128];
+  char buffer[128] = "";
   char *result = NULL;
   FILE *fp = popen(command, "r");
 
@@ -18,6 +18,7 @@ char *run_command(const char *command) {
   size_t total_size = 0;
   size_t buffer_size = sizeof(buffer);
   result = (char *)malloc(buffer_size + 1);
+  result[0] = '\0';
 
   if (result == NULL) {
     perror("malloc");
@@ -69,8 +70,10 @@ int does_tmux_exist() {
   char *has_session_output =
       run_command("tmux has-session -t '" SESSION_NAME "'");
   if (has_session_output == NULL) {
+    free(has_session_output);
     return 0;
   }
+  free(has_session_output);
   return 1;
 };
 
@@ -92,8 +95,20 @@ char *get_selected_directory(char *project_directory) {
   return selected_directory;
 };
 
-int tmux_create_window(char *selected_directory) {
+int is_in_tmux_session() {
+  char *output = run_command("echo $TMUX");
+  printf("'%s': %ld\n", output, strlen(output));
+  if (strlen(output) != 1) {
+    free(output);
+    return 1;
+  }
+  free(output);
+  return 0;
+}
 
+int tmux_create_window(char *selected_directory) {
+  int is_tmux_session = is_in_tmux_session();
+  printf("%d\n", is_tmux_session);
   int has_session_output = does_tmux_exist();
   char *tmux_start_command;
   if (has_session_output == 0) {
@@ -120,7 +135,6 @@ int tmux_create_window(char *selected_directory) {
   printf("%s", command);
   // run_command(command);
   free(command);
-  free(selected_directory);
   free(tmux_start_command);
   return 0;
 }
