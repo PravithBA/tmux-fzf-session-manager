@@ -97,7 +97,6 @@ char *get_selected_directory(char *project_directory) {
 
 int is_in_tmux_session() {
   char *output = run_command("echo $TMUX");
-  printf("'%s': %ld\n", output, strlen(output));
   if (strlen(output) != 1) {
     free(output);
     return 1;
@@ -106,35 +105,121 @@ int is_in_tmux_session() {
   return 0;
 }
 
+char *create_new_tmux_pannel(char *selected_directory) {
+  char *command =
+      (char *)malloc(sizeof("tmux new-session -t ") + sizeof(SESSION_NAME) +
+                     sizeof(SEMI_COLON_TMUX) + sizeof(" new-window -c ") +
+                     sizeof(selected_directory) + sizeof(CODE_COMMAND) +
+                     sizeof(SEMI_COLON_TMUX) + sizeof(SPLIT_PANE_HORIZONTAL) +
+                     sizeof(selected_directory) + sizeof(LAZYGIT_COMMAND) +
+                     sizeof(SEMI_COLON_TMUX) + sizeof(SELECT_PANE) +
+                     sizeof(" 1 ") + sizeof(SEMI_COLON_TMUX) +
+                     sizeof(SPLIT_PANE_VERTICAL) + sizeof(selected_directory) +
+                     sizeof(SEMI_COLON_TMUX) + sizeof(SELECT_PANE) +
+                     sizeof(" 0 ") + sizeof(SEMI_COLON_TMUX) + sizeof("\0"));
+  strcpy(command, "tmux new-session -t ");
+  strcat(command, SESSION_NAME);
+  strcat(command, SEMI_COLON_TMUX);
+  strcat(command, " new-window -c ");
+  strcat(command, selected_directory);
+  strcat(command, CODE_COMMAND);
+  strcat(command, SEMI_COLON_TMUX);
+  strcat(command, SPLIT_PANE_HORIZONTAL);
+  strcat(command, selected_directory);
+  strcat(command, LAZYGIT_COMMAND);
+  strcat(command, SEMI_COLON_TMUX);
+  strcat(command, SELECT_PANE);
+  strcat(command, " 1 ");
+  strcat(command, SEMI_COLON_TMUX);
+  strcat(command, SPLIT_PANE_VERTICAL);
+  strcat(command, selected_directory);
+  strcat(command, SEMI_COLON_TMUX);
+  strcat(command, SELECT_PANE);
+  strcat(command, " 0 ");
+  strcat(command, SEMI_COLON_TMUX);
+  strcat(command, "\0");
+  return command;
+}
+
+char *attach_tmux_pannel(char *selected_directory) {
+  char *command =
+      (char *)malloc(sizeof("tmux attach -t ") + sizeof(SESSION_NAME) +
+                     sizeof(SEMI_COLON_TMUX) + sizeof(" new-window -c ") +
+                     sizeof(selected_directory) + sizeof(CODE_COMMAND) +
+                     sizeof(SEMI_COLON_TMUX) + sizeof(SPLIT_PANE_HORIZONTAL) +
+                     sizeof(selected_directory) + sizeof(LAZYGIT_COMMAND) +
+                     sizeof(SEMI_COLON_TMUX) + sizeof(SELECT_PANE) +
+                     sizeof(" 1 ") + sizeof(SEMI_COLON_TMUX) +
+                     sizeof(SPLIT_PANE_VERTICAL) + sizeof(selected_directory) +
+                     sizeof(SEMI_COLON_TMUX) + sizeof(SELECT_PANE) +
+                     sizeof(" 0 ") + sizeof(SEMI_COLON_TMUX) + sizeof("\0"));
+  strcpy(command, "tmux attach -t ");
+  strcat(command, SESSION_NAME);
+  strcat(command, SEMI_COLON_TMUX);
+  strcat(command, " new-window -c ");
+  strcat(command, selected_directory);
+  strcat(command, CODE_COMMAND);
+  strcat(command, SEMI_COLON_TMUX);
+  strcat(command, SPLIT_PANE_HORIZONTAL);
+  strcat(command, selected_directory);
+  strcat(command, LAZYGIT_COMMAND);
+  strcat(command, SEMI_COLON_TMUX);
+  strcat(command, SELECT_PANE);
+  strcat(command, " 1 ");
+  strcat(command, SEMI_COLON_TMUX);
+  strcat(command, SPLIT_PANE_VERTICAL);
+  strcat(command, selected_directory);
+  strcat(command, SEMI_COLON_TMUX);
+  strcat(command, SELECT_PANE);
+  strcat(command, " 0 ");
+  strcat(command, SEMI_COLON_TMUX);
+  strcat(command, "\0");
+  return command;
+}
+
+char *attach_tmux_pannel_in_tmux(char *selected_directory) {
+  char *command = (char *)malloc(
+      sizeof("tmux new-window -c ") + sizeof(selected_directory) +
+      sizeof(CODE_COMMAND) + sizeof(SEMI_COLON_TMUX) +
+      sizeof(SPLIT_PANE_HORIZONTAL) + sizeof(selected_directory) +
+      sizeof(LAZYGIT_COMMAND) + sizeof(SEMI_COLON_TMUX) + sizeof(SELECT_PANE) +
+      sizeof(" 1 ") + sizeof(SEMI_COLON_TMUX) + sizeof(SPLIT_PANE_VERTICAL) +
+      sizeof(selected_directory) + sizeof(SEMI_COLON_TMUX) +
+      sizeof(SELECT_PANE) + sizeof(" 0 ") + sizeof(SEMI_COLON_TMUX) +
+      sizeof("\0"));
+  strcpy(command, "tmux new-window -c ");
+  strcat(command, selected_directory);
+  strcat(command, CODE_COMMAND);
+  strcat(command, SEMI_COLON_TMUX);
+  strcat(command, SPLIT_PANE_HORIZONTAL);
+  strcat(command, selected_directory);
+  strcat(command, LAZYGIT_COMMAND);
+  strcat(command, SEMI_COLON_TMUX);
+  strcat(command, SELECT_PANE);
+  strcat(command, " 1 ");
+  strcat(command, SEMI_COLON_TMUX);
+  strcat(command, SPLIT_PANE_VERTICAL);
+  strcat(command, selected_directory);
+  strcat(command, SEMI_COLON_TMUX);
+  strcat(command, SELECT_PANE);
+  strcat(command, " 0 ");
+  strcat(command, SEMI_COLON_TMUX);
+  strcat(command, "\0");
+  return command;
+}
+
 int tmux_create_window(char *selected_directory) {
   int is_tmux_session = is_in_tmux_session();
-  printf("%d\n", is_tmux_session);
   int has_session_output = does_tmux_exist();
-  char *tmux_start_command;
-  if (has_session_output == 0) {
-    char temp[] = "tmux new -t " SESSION_NAME " -c ";
-    tmux_start_command =
-        (char *)malloc(strlen(temp) + strlen(selected_directory) +
-                       strlen(" \\; new-window \"code .\"") + 1);
-    strcpy(tmux_start_command, temp);
-    strcat(tmux_start_command, selected_directory);
-    strcat(tmux_start_command, " \\; new-window \"code .\" ");
+  char *command = NULL;
+  if (is_tmux_session == 1) {
+    command = attach_tmux_pannel_in_tmux(selected_directory);
+  } else if (has_session_output == 0) {
+    command = create_new_tmux_pannel(selected_directory);
   } else {
-    char temp[] = "tmux a -t " SESSION_NAME "\\; new-window -c ";
-    tmux_start_command = (char *)malloc(
-        strlen(temp) + strlen(selected_directory) + strlen(" \"code .\" ") + 1);
-    strcpy(tmux_start_command, temp);
-    strcat(tmux_start_command, selected_directory);
-    strcat(tmux_start_command, " \"code .\" ");
+    command = attach_tmux_pannel(selected_directory);
   }
-  tmux_start_command[strlen(tmux_start_command)] = '\0';
-  char *command = (char *)malloc(strlen(tmux_start_command) +
-                                 strlen(TMUX_MAIN_COMMAND) + 1);
-  strcpy(command, tmux_start_command);
-  strcat(command, TMUX_MAIN_COMMAND);
-  printf("%s", command);
-  // run_command(command);
+  system(command);
   free(command);
-  free(tmux_start_command);
   return 0;
 }
